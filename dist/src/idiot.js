@@ -27,25 +27,37 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.app = void 0;
 const discord_js_1 = require("discord.js");
-const client = new discord_js_1.Client();
 const dotenv_1 = require("dotenv");
-const commandsutil_1 = require("./commandsutil");
+const commandsutil_1 = require("./utils/commandsutil");
 const fs_1 = require("fs");
 const path_1 = require("path");
+const express_1 = __importDefault(require("express"));
+exports.app = express_1.default();
+const client = new discord_js_1.Client();
 dotenv_1.config();
+let commandHandler = new commandsutil_1.CommandHandler(client);
 function loadHandler() {
-    const registeredCommands = Promise.all(fs_1.readdirSync(path_1.join(__dirname, '../commands'))
+    const registeredCommands = Promise.all(fs_1.readdirSync(path_1.join(__dirname, '../src/commands'))
         .filter(fileName => fileName.endsWith('.js'))
         .map((fileName) => __awaiter(this, void 0, void 0, function* () {
-        const path = path_1.join(__dirname, '../commands', fileName);
+        const path = path_1.join(__dirname, '../src/commands', fileName);
         const file = yield Promise.resolve().then(() => __importStar(require(path)));
-        commandsutil_1.CommandHandler.registerCommand(file.command);
+        commandHandler.registerCommand(file.command);
     })));
 }
+let x;
 client.once('ready', () => {
     var _a, _b;
+    let alex = {
+        name: 'alex',
+        isGay: true
+    };
     loadHandler();
     console.log('Ready!');
     (_a = client.user) === null || _a === void 0 ? void 0 : _a.setStatus('online');
@@ -56,11 +68,28 @@ client.once('ready', () => {
         }
     });
 });
-// client.on('message', (msg: Message) => {
-//     if(msg.content === 'ping') {
-//         console.log(msg.content)
-//         msg.channel.send('pong');
-//     }
-// })
-client.login(`${process.env.TOKEN}`);
+client.on('message', (message) => {
+    x = message.content;
+});
+exports.app.get('/', function (req, res) {
+    res.send(x);
+});
+exports.app.get('/alarm', function (req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const alarmChannel = client.channels.cache.get('499404898593538060');
+        let auth = req.query.auth;
+        let alarmTripper = req.query.tripped;
+        if (auth == `8qMLx9k7`) {
+            alarmChannel.send(`<@185063150557593600>, <@260940872848375810> ${alarmTripper} has tripped the alarm.`);
+            res.send('You have been notified');
+        }
+        else {
+            res.send('Incorrect auth');
+        }
+    });
+});
+exports.app.listen(3000, function () {
+    console.log('Example app listening on port 3000!');
+});
+client.login(`NTAzMzU1ODIxMTY2NjkwMzA2.XtAAMg.5I2hPSaiDTc700HOR9eKF9kmaF0`);
 //# sourceMappingURL=idiot.js.map

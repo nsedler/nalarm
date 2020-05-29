@@ -10,11 +10,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.command = void 0;
-const commandsutil_1 = require("../commandsutil");
+const commandsutil_1 = require("../utils/commandsutil");
 exports.command = new commandsutil_1.Command({
     aliases: ['ping'],
     command: (message) => __awaiter(void 0, void 0, void 0, function* () {
-        return message.channel.send("pong");
+        return message.channel.send(`Client ping: ${message.client.ws.ping}ms`);
     }),
     description: 'ping pong'
 });

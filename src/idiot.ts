@@ -20,10 +20,10 @@ interface gayMan {
 
 function loadHandler(): void {
     const registeredCommands = Promise.all (
-        readdirSync(join(__dirname, '../dist/commands'))
+        readdirSync(join(__dirname, '../src/commands'))
             .filter(fileName => fileName.endsWith('.js'))
             .map(async fileName => {
-                const path = join(__dirname, '../dist/commands', fileName);
+                const path = join(__dirname, '../src/commands', fileName);
                 const file: { command: Command } = await import(path);
                 commandHandler.registerCommand(file.command);
             }),
@@ -60,13 +60,22 @@ app.get('/', function (req, res) {
 	res.send(x);
 });
 
-app.get('/gay', async function(req, res) {
-	const x: Channel | undefined = client.channels.cache.get('499404898593538060');
-	(x as TextChannel).send("test")
+app.get('/alarm', async function(req, res) {
+    const alarmChannel: Channel | undefined = client.channels.cache.get('499404898593538060') as TextChannel;
+
+    let auth: any = req.query.auth;
+    let alarmTripper: any = req.query.tripped;
+    
+    if(auth == `8qMLx9k7`) {
+        (alarmChannel as TextChannel).send(`<@185063150557593600>, <@260940872848375810> ${alarmTripper} has tripped the alarm.`);
+        res.send('You have been notified');
+    } else {
+        res.send('Incorrect auth');
+    }
 });
   
 app.listen(3000, function () {
 	console.log('Example app listening on port 3000!');
 });
 
-client.login(`${process.env.DEVTOKEN}`);
+client.login(`NTAzMzU1ODIxMTY2NjkwMzA2.XtAAMg.5I2hPSaiDTc700HOR9eKF9kmaF0`);
