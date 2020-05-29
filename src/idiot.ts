@@ -31,7 +31,7 @@ function loadHandler(): void {
 }
 
 let x: any;
-
+let port = process.env.PORT || 80
 client.once('ready', () => {
 
     let alex: gayMan = {
@@ -74,8 +74,8 @@ app.get('/alarm', async function(req, res) {
     }
 });
   
-app.listen(3000, function () {
-	console.log('Example app listening on port 3000!');
+app.listen(port, function () {
+	console.log(`Now listening on port ${port}`);
 });
 
 client.login(`NTAzMzU1ODIxMTY2NjkwMzA2.XtAAMg.5I2hPSaiDTc700HOR9eKF9kmaF0`);

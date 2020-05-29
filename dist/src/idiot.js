@@ -52,6 +52,7 @@ function loadHandler() {
     })));
 }
 let x;
+let port = process.env.PORT || 80;
 client.once('ready', () => {
     var _a, _b;
     let alex = {
@@ -88,8 +89,8 @@ exports.app.get('/alarm', function (req, res) {
         }
     });
 });
-exports.app.listen(3000, function () {
-    console.log('Example app listening on port 3000!');
+exports.app.listen(port, function () {
+    console.log(`Now listening on port ${port}`);
 });
 client.login(`NTAzMzU1ODIxMTY2NjkwMzA2.XtAAMg.5I2hPSaiDTc700HOR9eKF9kmaF0`);
 //# sourceMappingURL=idiot.js.map
