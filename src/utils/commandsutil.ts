@@ -1,6 +1,6 @@
-import { Message, Client } from "discord.js";
+import { Message, Client, TextChannel } from "discord.js";
 import { command } from "../commands/ping";
-import { app } from "../idiot";
+import { app, logger } from "../idiot";
 
 export class Command {
     constructor(public options: CommandOptions){
@@ -33,6 +33,8 @@ export class CommandHandler {
 
         const rawMessageContent = message.content.split(' ');
 
+        let channel: TextChannel | undefined = message.channel as TextChannel;
+        
         let cmd = rawMessageContent
             .splice(0, 1)
             .toString()
@@ -58,8 +60,8 @@ export class CommandHandler {
                         await command(message, messageContent);
                     }
                 });
-                
-
+            
+            logger.bot(`${message.author.username} used ${cmd} in Guild: ${message.guild.name} : ${channel.name}`);
             await Promise.all(commandsRan);
         }
     }

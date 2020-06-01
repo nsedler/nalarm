@@ -10,7 +10,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CommandHandler = exports.Command = void 0;
-const idiot_1 = require("../idiot");
 class Command {
     constructor(options) {
         this.options = options;
@@ -34,7 +33,6 @@ class CommandHandler {
             if (message.author.bot)
                 return;
             const rawMessageContent = message.content.split(' ');
-            let channel = message.channel;
             let cmd = rawMessageContent
                 .splice(0, 1)
                 .toString()
@@ -59,7 +57,6 @@ class CommandHandler {
                         yield command(message, messageContent);
                     }
                 }));
-                idiot_1.logger.bot(`${message.author.username} used ${cmd} in Guild: ${message.guild.name} : ${channel.name}`);
                 yield Promise.all(commandsRan);
             }
         });

@@ -31,16 +31,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.app = exports.logger = void 0;
+exports.app = void 0;
 const discord_js_1 = require("discord.js");
 const dotenv_1 = require("dotenv");
 const commandsutil_1 = require("./utils/commandsutil");
 const fs_1 = require("fs");
 const path_1 = require("path");
 const express_1 = __importDefault(require("express"));
-const log = __importStar(require("./utils/logger"));
-let config = require('./config.json');
-exports.logger = new log.Logger();
 exports.app = express_1.default();
 const client = new discord_js_1.Client();
 dotenv_1.config();
@@ -54,10 +51,12 @@ function loadHandler() {
         commandHandler.registerCommand(file.command);
     })));
 }
+let x;
 let port = process.env.PORT || 80;
 client.once('ready', () => {
-    var _a, _b, _c;
+    var _a, _b;
     loadHandler();
+    console.log('Ready!');
     (_a = client.user) === null || _a === void 0 ? void 0 : _a.setStatus('online');
     (_b = client.user) === null || _b === void 0 ? void 0 : _b.setPresence({
         activity: {
@@ -65,54 +64,47 @@ client.once('ready', () => {
             type: 'PLAYING'
         }
     });
-    exports.logger.info(`${(_c = client.user) === null || _c === void 0 ? void 0 : _c.username} is now online`);
+});
+client.on('message', (message) => {
+    x = message.content;
 });
 exports.app.get('/', function (req, res) {
-    return __awaiter(this, void 0, void 0, function* () {
-        exports.logger.info(`Automatic keep up of heroku.`);
-        res.send(`Automatic keep up of heroku.`);
-    });
+    res.send(x);
 });
 exports.app.get('/alarm', function (req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const guild = client.guilds.cache.get(config.guild);
-        const alarmChannel = guild === null || guild === void 0 ? void 0 : guild.channels.cache.get(config.channel);
-        const alarmRole = guild === null || guild === void 0 ? void 0 : guild.roles.cache.get(config.role);
+        const guild = client.guilds.cache.get('389528519299956737');
+        const alarmRole = guild === null || guild === void 0 ? void 0 : guild.roles.cache.get('717030908133376061');
+        const alarmChannel = guild === null || guild === void 0 ? void 0 : guild.channels.cache.get('499404898593538060');
         let auth = req.query.auth;
         let alarmTripper = req.query.tripped;
-        if (auth == config.auth) {
+        if (auth == `8qMLx9k7`) {
             alarmChannel.send(`${alarmRole}, ${alarmTripper} has tripped the alarm.`);
-            exports.logger.info(`${alarmTripper} has tripped the alarm.`);
             res.send('You have been notified');
         }
         else {
-            exports.logger.warning(`${req.ip} has attempted to use the api without correct auth.`);
             res.send('Incorrect auth');
         }
     });
 });
-if (port === 80) {
-    exports.app.get('/test', function (req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const guild = client.guilds.cache.get(config.guild);
-            const alarmChannel = guild === null || guild === void 0 ? void 0 : guild.channels.cache.get(config.channel);
-            const alarmRole = guild === null || guild === void 0 ? void 0 : guild.roles.cache.get(config.role);
-            let auth = req.query.auth;
-            let alarmTripper = req.query.tripped;
-            if (auth == `test`) {
-                alarmChannel.send(`${alarmRole}, This is a test, ${alarmTripper} has tripped the alarm.`);
-                exports.logger.darkrp(`${alarmTripper} has tripped the alarm.`);
-                res.send('You have been notified');
-            }
-            else {
-                exports.logger.warning(`${req.ip} has attempted to use the api without correct auth.`);
-                res.send('Incorrect auth');
-            }
-        });
+exports.app.get('/test', function (req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const guild = client.guilds.cache.get('389528519299956737');
+        const alarmRole = guild === null || guild === void 0 ? void 0 : guild.roles.cache.get('717030908133376061');
+        const alarmChannel = guild === null || guild === void 0 ? void 0 : guild.channels.cache.get('499404898593538060');
+        let auth = req.query.auth;
+        let alarmTripper = req.query.tripped;
+        if (auth == `test`) {
+            alarmChannel.send(`${alarmRole}, This is a test, ${alarmTripper} has tripped the alarm.`);
+            res.send('You have been notified');
+        }
+        else {
+            res.send('Incorrect auth');
+        }
     });
-}
-exports.app.listen(port, function () {
-    exports.logger.info(`Now listening on port ${port}`);
 });
-client.login(`${config.token}`);
+exports.app.listen(port, function () {
+    console.log(`Now listening on port ${port}`);
+});
+client.login(`${process.env.DEVTOKEN}`);
 //# sourceMappingURL=idiot.js.map

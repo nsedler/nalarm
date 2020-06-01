@@ -1,22 +1,23 @@
-import { Client, Message, Presence, Guild, Channel, TextChannel } from 'discord.js';
+import { Client, Guild, Channel, TextChannel, Role } from 'discord.js';
+import { Config } from './structs/config'
 import { config as dotenv } from "dotenv"
 import { CommandHandler, Command } from './utils/commandsutil';
+
 import { readdirSync } from 'fs';
 import { join } from 'path';
+import express from 'express';
+import * as log from './utils/logger';
 
-import express, { json } from 'express';
+let config: Config = require('./config.json');
 
+export let logger = new log.Logger();
 export const app: express.Application = express();
+
 const client = new Client();
 
 dotenv();
 
 let commandHandler = new CommandHandler(client);
-
-interface gayMan {
-    name: string,
-    isGay: boolean
-}
 
 function loadHandler(): void {
     const registeredCommands = Promise.all (
@@ -30,52 +31,67 @@ function loadHandler(): void {
     )
 }
 
-let x: any;
 let port = process.env.PORT || 80
+
 client.once('ready', () => {
-
-    let alex: gayMan = {
-        name: 'alex', 
-        isGay: true
-	};
-	
-	
-
+    
     loadHandler();
-    console.log('Ready!');
+    
     client.user?.setStatus('online')
     client.user?.setPresence({
         activity: {
-            name: 'Gay',
+            name: 'Watching over your base',
             type: 'PLAYING'
         }
     });
+
+    logger.info(`${client.user?.username} is now online`);
 });
 
-client.on('message', (message: Message) => {
-	x = message.content;
-});
-
-app.get('/', function (req, res) {
-	res.send(x);
+app.get('/', async function(req, res) {
+    logger.info(`Automatic keep up of heroku.`);
+    res.send(`Automatic keep up of heroku.`);
 });
 
 app.get('/alarm', async function(req, res) {
-    const alarmChannel: Channel | undefined = client.channels.cache.get('499404898593538060') as TextChannel;
+    const guild: Guild | undefined = client.guilds.cache.get(config.guild);
+    const alarmChannel: TextChannel | undefined = guild?.channels.cache.get(config.channel) as TextChannel;
+    const alarmRole: Role | undefined =  guild?.roles.cache.get(config.role);
 
     let auth: any = req.query.auth;
     let alarmTripper: any = req.query.tripped;
-    
-    if(auth == `8qMLx9k7`) {
-        (alarmChannel as TextChannel).send(`<@185063150557593600>, <@260940872848375810> ${alarmTripper} has tripped the alarm.`);
+
+    if(auth == config.auth) {
+        (alarmChannel as TextChannel).send(`${alarmRole}, ${alarmTripper} has tripped the alarm`);
+        logger.darkrp(`${alarmTripper} has tripped the alarm`);
         res.send('You have been notified');
     } else {
+        logger.warning(`${req.ip} has attempted to use the api without correct auth`)
         res.send('Incorrect auth');
     }
 });
-  
+
+if(port === 80){
+    app.get('/test', async function(req, res) {
+        const guild: Guild | undefined = client.guilds.cache.get(config.guild);
+        const alarmChannel: Channel | undefined = guild?.channels.cache.get(config.channel) as TextChannel;
+        const alarmRole: Role | undefined =  guild?.roles.cache.get(config.role);
+
+        let auth: any = req.query.auth;
+        let alarmTripper: any = req.query.tripped;
+        
+        if(auth == `test`) {
+            (alarmChannel as TextChannel).send(`${alarmRole}, This is a test, ${alarmTripper} has tripped the alarm`);
+            logger.darkrp(`${alarmTripper} has tripped the alarm`);
+            res.send('You have been notified');
+        } else {
+            logger.warning(`${req.ip} has attempted to use the api without correct auth`)
+            res.send('Incorrect auth');
+        }
+    });
+}
 app.listen(port, function () {
-	console.log(`Now listening on port ${port}`);
+    logger.info(`Now listening on port ${port}`);
 });
 
-client.login(`NTAzMzU1ODIxMTY2NjkwMzA2.XtAAMg.5I2hPSaiDTc700HOR9eKF9kmaF0`);
+client.login(`${config.token}`);
