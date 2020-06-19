@@ -33,7 +33,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.app = exports.logger = void 0;
 const discord_js_1 = require("discord.js");
-const dotenv_1 = require("dotenv");
 const commandsutil_1 = require("./utils/commandsutil");
 const fs_1 = require("fs");
 const path_1 = require("path");
@@ -43,8 +42,10 @@ let config = require('./config.json');
 exports.logger = new log.Logger();
 exports.app = express_1.default();
 const client = new discord_js_1.Client();
-dotenv_1.config();
 let commandHandler = new commandsutil_1.CommandHandler(client);
+/**
+ * loads all of the handlers for the commands
+ */
 function loadHandler() {
     const registeredCommands = Promise.all(fs_1.readdirSync(path_1.join(__dirname, '../src/commands'))
         .filter(fileName => fileName.endsWith('.js'))
@@ -67,6 +68,10 @@ client.once('ready', () => {
     });
     exports.logger.info(`${(_c = client.user) === null || _c === void 0 ? void 0 : _c.username} is now online`);
 });
+/**
+ * only reason you should have anything happen on the default route is
+ * for automatic keep up of heroku from https://cron-job.org/en/
+ */
 exports.app.get('/', function (req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         exports.logger.info(`Automatic keep up of heroku.`);
@@ -81,16 +86,20 @@ exports.app.get('/alarm', function (req, res) {
         let auth = req.query.auth;
         let alarmTripper = req.query.tripped;
         if (auth == config.auth) {
-            alarmChannel.send(`${alarmRole}, ${alarmTripper} has tripped the alarm.`);
-            exports.logger.info(`${alarmTripper} has tripped the alarm.`);
+            alarmChannel.send(`${alarmRole}, ${alarmTripper} has tripped the alarm`);
+            exports.logger.darkrp(`${alarmTripper} has tripped the alarm`);
             res.send('You have been notified');
         }
         else {
-            exports.logger.warning(`${req.ip} has attempted to use the api without correct auth.`);
+            exports.logger.warning(`${req.ip} has attempted to use the api without correct auth`);
             res.send('Incorrect auth');
         }
     });
 });
+/**
+ * This route is only used for testing
+ * "port" should only be 80 if you are testing / debugging in your own environment
+ */
 if (port === 80) {
     exports.app.get('/test', function (req, res) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -100,12 +109,12 @@ if (port === 80) {
             let auth = req.query.auth;
             let alarmTripper = req.query.tripped;
             if (auth == `test`) {
-                alarmChannel.send(`${alarmRole}, This is a test, ${alarmTripper} has tripped the alarm.`);
-                exports.logger.darkrp(`${alarmTripper} has tripped the alarm.`);
+                alarmChannel.send(`${alarmRole}, This is a test, ${alarmTripper} has tripped the alarm`);
+                exports.logger.darkrp(`${alarmTripper} has tripped the alarm`);
                 res.send('You have been notified');
             }
             else {
-                exports.logger.warning(`${req.ip} has attempted to use the api without correct auth.`);
+                exports.logger.warning(`${req.ip} has attempted to use the api without correct auth`);
                 res.send('Incorrect auth');
             }
         });
