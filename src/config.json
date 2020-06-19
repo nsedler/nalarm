@@ -1,7 +1,7 @@
 {   
-    "token" : "NzE2ODg0MzI2ODU5NTM4NDcz.XtUqyw.Da9263D2A5iDAqvRMviwKKXQqgE",
-    "guild" : "389528519299956737",
-    "channel" : "499404898593538060",
-    "role" : "717030908133376061",
-    "auth" : "8qMLx9k7"
+    "token" : "bot token here",
+    "guild" : "guild id here",
+    "channel" : "channel id here",
+    "role" : "role id here",
+    "auth" : "password here"
 }

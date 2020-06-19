@@ -1,6 +1,5 @@
 import { Client, Guild, Channel, TextChannel, Role } from 'discord.js';
 import { Config } from './structs/config'
-import { config as dotenv } from "dotenv"
 import { CommandHandler, Command } from './utils/commandsutil';
 
 import { readdirSync } from 'fs';
@@ -15,10 +14,11 @@ export const app: express.Application = express();
 
 const client = new Client();
 
-dotenv();
-
 let commandHandler = new CommandHandler(client);
 
+/**
+ * loads all of the handlers for the commands
+ */
 function loadHandler(): void {
     const registeredCommands = Promise.all (
         readdirSync(join(__dirname, '../src/commands'))
@@ -48,6 +48,10 @@ client.once('ready', () => {
     logger.info(`${client.user?.username} is now online`);
 });
 
+/**
+ * only reason you should have anything happen on the default route is 
+ * for automatic keep up of heroku from https://cron-job.org/en/
+ */
 app.get('/', async function(req, res) {
     logger.info(`Automatic keep up of heroku.`);
     res.send(`Automatic keep up of heroku.`);
@@ -71,6 +75,10 @@ app.get('/alarm', async function(req, res) {
     }
 });
 
+/**
+ * This route is only used for testing
+ * "port" should only be 80 if you are testing / debugging in your own environment
+ */
 if(port === 80){
     app.get('/test', async function(req, res) {
         const guild: Guild | undefined = client.guilds.cache.get(config.guild);
