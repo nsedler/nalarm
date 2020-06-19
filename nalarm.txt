@@ -1,0 +1,212 @@
+@name NAlarm
+@persist [APILink]:string [CurrentlyPlaying]:number
+@persist [Min Max]:vector [Red Green Blue BPurple]:vector
+@persist [Whitelist]:array [Config]:table
+@persist [Ent]:entity
+@autoupdate NAlarm
+
+#[
+    Expression 2 written by Idiot
+    This is an alarm that pings a role on discord when it is tripped
+    Idiot's github: https://github.com/nsedler
+    Youtube series on how to setup web api, discord bot, and link them with the expression 2: 
+]#
+
+interval(100)
+
+if(first() | duped()) {
+    
+    runOnChat(1)
+    runOnHTTP(1)
+    
+    #[====================================================
+        nprint:
+            looks better than the basic print function
+      ====================================================]#
+    
+    function nprint(Str:string) {
+        printColor(vec(44, 47, 51), "[",
+                   vec(114, 137, 218), "NALARM",
+                   vec(44, 47, 51), "] ",
+                   vec(255, 255, 255), Str)
+    }
+    
+    #[=============================================================
+        Configration:
+            color: sets the color of the holo
+            sound: sounds that plays when alarm is tripped
+            auth: authentication for the web api
+            showing: whether or not the alarm outline is showing
+      =============================================================]#
+    
+    Config["color", vector] = vec(114, 137, 218)
+    Config["sound", string] = "npc/attack_helicopter/aheli_crash_alert2.wav"
+    Config["auth", string] = "8qMLx9k7"
+    Config["showing", number] = 1
+    
+    #[========================================================
+        Alarm Holo:
+            creates the holo to see the size of your alarm
+      ========================================================]#
+    
+    holoCreate(1)
+    holoAlpha(1, 185)
+    holoColor(1, Config["color", vector])
+    holoDisableShading(1, 1)
+    
+    APILink = "HOST LINK HERE/alarm?auth=" + Config["auth", string] + "&tripped="
+    
+    CurrentlyPlaying = 0
+    
+    #[=====================================================================
+        Whitelist:
+            whitelist is an array of all players who wont trip the alarm
+            you are whitelisted by default
+      =====================================================================]#
+    
+    Whitelist:pushEntity(owner())
+}
+
+if(chatClk(owner())) {
+    
+    OwnerLS = owner():lastSaid():explode(" ")
+    
+    # switch statement for all chat commands related to this expression 2
+    switch(OwnerLS[1, string]) {
+        case "player",
+        
+            hideChat(1)
+            
+            local Ent = findPlayerByName(OwnerLS[3, string])
+            
+            if(Ent:isValid() & Ent:isPlayer()) {
+                
+                switch(OwnerLS[2, string]) {
+                    
+                    # Add a player to the whitelist
+                    case "add",
+                    
+                        if(Whitelist:getIndex(Ent)) { nprint(Ent:name() + " is already added to the whitelist") } 
+                        else { 
+                            Whitelist:pushEntity(Ent) 
+                            nprint(Ent:name() + " has been added to the whitelist")
+                        }
+                    break
+                    
+                    # Remove a player from the whitelist
+                    case "remove",
+                    
+                        if(Whitelist:getIndex(Ent)) {
+                            Whitelist:removeEntity(Whitelist:getIndex(Ent))
+                            nprint(Ent:name() + " has been removed from the whitelist")
+                        } else{ nprint(Ent:name() + " is not in the whitelist yet") }
+                    break
+                    
+                    # Print all whitelisted member
+                    default,
+                        
+                        nprint("Whitelisted members:")
+                        foreach(K, V:entity = Whitelist) {
+                            print("  " + V:name())
+                        }
+                    break
+                }
+            }
+        break
+        
+        # Set the min value of the alarm
+        case "min",
+            
+            hideChat(1)
+        
+            Min = owner():aimPos()
+            nprint("Minimum is set to: " + round(Min:x()) + ", " + round(Min:y()) + ", " + round(Min:z()))
+        break
+        
+        # Set the max value of the alarm
+        case "max",
+        
+            hideChat(1)
+        
+            Max = owner():aimPos()
+            nprint("Maximum is set to: " + round(Max:x()) + ", " + round(Max:y()) + ", " + round(Max:z()))
+        break
+        
+        # Show the alarm outline
+        case "show",
+        
+            hideChat(1)
+        
+            if(Config["showing", number]) { nprint("Alarm outline is already showing") }
+            else {
+                Config["showing", number] = 1
+                nprint("Alarm outline is showing now")   
+            }
+        break
+        
+        # Hide the alarm outline
+        case "hide",
+        
+            hideChat(1)
+        
+            if(Config["showing", number]) {
+                Config["showing", number] = 0
+                nprint("Alarm outline is now hidden")
+            }
+            else { nprint("Alarm outline is already hidden") }
+        break
+    }
+}
+
+# Checks if the Min or Max has been changed
+if(changed(Min) & Min & Max | changed(Max) & Min & Max) {
+    HoloScale = Min - Max
+    
+    holoScaleUnits(1, HoloScale)
+    holoPos(1, (Min + Max) / 2)
+}
+
+# Checks if the state of the alarm outline has changed
+if(changed(Config["showing", number])) { holoVisible(1, players(), Config["showing", number]) }
+
+# If both have a value then its fine to start the detection process
+if(Min & Max) {
+    findIncludeClass("Player")
+    findInBox(Min, Max)
+    
+    Ent = find()
+    
+    # If the player inside of the alarm changes run these commands again
+    if(changed(Ent) & Ent:isPlayer() & Whitelist:getIndex(Ent) == 0) {
+        nprint(Ent:name() + " has tripped the alarm")
+        
+        concmd("sam pm \"" + Ent:steamID() + "\"" + Ent:name() +" you have tripped the alarm.  We have 10 seconds to find and kill you.")
+        
+        # We check if the alarm is still playing so we don't spam the discord or your party
+        if(CurrentlyPlaying == 0) { timer("alarm", 1) }
+    }
+}
+
+# If the alarm is going off send the discord message, message your party and whitelisted member, and play the alarm sound
+if(clk("alarm")) {
+    
+    if(httpCanRequest()) { httpRequest(APILink + httpUrlEncode(Ent:name())) }
+    
+    CurrentlyPlaying = 1
+    
+    entity():soundPlay(1, 10, Config["sound", string])
+    
+    concmd("say /p " + Ent:name() + " has tripped the alarm")
+    
+    # Message everyone in the party (except for the owner) about the alarm being set off
+    foreach(K, V:entity = Whitelist) {
+        if(V != owner()) { concmd("sam pm \"" + V:steamID() + "\" " + Ent:name() + " has tripped the alarm") }
+    }
+    
+    timer("10seconds", 9999)
+}
+
+if(clk("10seconds")) { CurrentlyPlaying = 0 }
+
+# You will get a quick hint if the discord message was sent successfuly
+if(httpClk() & httpSuccess()) { hint(httpData(), 3) }
